@@ -14,8 +14,9 @@ export interface FormDefinition {
 }
 export type FormFields<T extends FormDefinition> = { [F in keyof T]: FormField }
 export type Form<T extends FormDefinition> = { isValid: boolean } & FormFields<T>
-export type SetField = (name: string, value: string) => void
-export type Reset = () => void
+export type SetField<T extends FormDefinition> = (name: keyof T, value: string) => void
+export type Reset<T extends FormDefinition> = (formDefinition?: FormJson<T>) => void
+export type FormJson<T extends FormDefinition> = { [F in keyof T]: string }
 
 const validateForm = <T extends FormDefinition>(formDefinition: T): Form<T> =>
   Object.keys(formDefinition).reduce<Form<T>>(
@@ -34,13 +35,34 @@ const validateForm = <T extends FormDefinition>(formDefinition: T): Form<T> =>
     { isValid: true } as any
   )
 
-export const useForm = <T extends FormDefinition>(formDefinition: T): [Form<T>, SetField, Reset] => {
-  const [originalForm] = useState(formDefinition)
-  const [form, setForm] = useState(formDefinition)
+export const useForm = <T extends FormDefinition>(
+  formDefinition: T,
+  formValues?: FormJson<T>
+): {
+  form: Form<T>
+  setField: SetField<T>
+  reset: Reset<T>
+  formToJson: (form: Form<T>) => FormJson<T>
+} => {
+  const setFormValues = (formDefinition: T, formValues?: FormJson<T>) =>
+    Object.keys(formDefinition).reduce(
+      (form, field) => {
+        form[field] = {
+          ...formDefinition[name],
+          value: (formValues && formValues[name]) || formDefinition[name].value || ''
+        }
+        return form
+      },
+      {} as T
+    )
 
-  const setField = (name, value) => {
+  const [originalFormDefinition] = useState(formDefinition)
+  const [originalFormValues] = useState(formValues)
+  const [form, setForm] = useState(() => setFormValues(formDefinition))
+
+  const setField = (name: string, value: string) => {
     setForm({
-      ...(form as any),
+      ...form,
       [name]: {
         ...form[name],
         value,
@@ -49,9 +71,23 @@ export const useForm = <T extends FormDefinition>(formDefinition: T): [Form<T>, 
     })
   }
 
-  const reset = () => {
-    setForm(originalForm)
+  const reset = (formValues?: FormJson<T>) => {
+    setForm(setFormValues(originalFormDefinition, formValues || originalFormValues))
   }
 
-  return [validateForm(form), setField, reset]
+  const formToJson = (form: Form<T>): FormJson<T> =>
+    Object.keys(form).reduce(
+      (json, field) => {
+        json[field] = form[field].value
+        return json
+      },
+      {} as FormJson<T>
+    )
+
+  return {
+    form: validateForm(form),
+    setField,
+    reset,
+    formToJson
+  }
 }

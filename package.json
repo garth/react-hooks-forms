@@ -1,6 +1,6 @@
 {
   "name": "react-hooks-forms",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A react hooks approach to forms",
   "repository": "https://github.com/garth/react-hooks-forms.git",
   "author": "Garth Williams",
@@ -29,14 +29,14 @@
     "jsxBracketSameLine": true
   },
   "devDependencies": {
-    "@types/react": "^16.7.6",
-    "prettier": "^1.15.2",
-    "react": "^16.7.0-alpha.2",
-    "rimraf": "^2.6.2",
-    "tslint": "^5.11.0",
-    "tslint-config-prettier": "^1.16.0",
-    "tslint-react": "^3.6.0",
-    "typescript": "^3.1.6"
+    "@types/react": "^16.8.19",
+    "prettier": "^1.17.1",
+    "react": "^16.8.6",
+    "rimraf": "^2.6.3",
+    "tslint": "^5.17.0",
+    "tslint-config-prettier": "^1.18.0",
+    "tslint-react": "^4.0.0",
+    "typescript": "3.4"
   },
   "dependencies": {
     "tslib": "^1.9.3"
