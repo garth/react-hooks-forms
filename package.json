@@ -1,6 +1,6 @@
 {
   "name": "react-hooks-forms",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A react hooks approach to forms",
   "repository": "https://github.com/garth/react-hooks-forms.git",
   "author": "Garth Williams",
@@ -15,7 +15,7 @@
   "types": "lib/index.d.ts",
   "scripts": {
     "prebuild": "rimraf lib && rimraf es",
-    "build:lib": "tsc --outDir lib --target es5 --preserveWatchOutput --downlevelIteration",
+    "build:lib": "tsc --outDir lib --target es5 --preserveWatchOutput",
     "build:es": "tsc --outDir es --module es2015 --preserveWatchOutput",
     "build": "npm run build:lib & npm run build:es",
     "lint": "tslint -c tslint.json -t verbose 'src/**/*.{ts,tsx}'",
