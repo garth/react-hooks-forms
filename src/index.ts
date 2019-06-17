@@ -19,6 +19,8 @@ export type SetField<T extends FormDefinition> = (name: keyof T, value: string) 
 export type Reset<T extends FormDefinition> = (formDefinition?: FormJson<T>) => void
 export type FormJson<T extends FormDefinition> = { [F in keyof T]: string }
 
+export const defineForm: <T extends FormDefinition>(formDefinition: T) => T = formDefinition => formDefinition
+
 const validateForm = <T extends FormDefinition>(formDefinition: T): Form<T> =>
   Object.keys(formDefinition).reduce(
     (form, fieldName) => {

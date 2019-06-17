@@ -19,12 +19,12 @@ npm install react-hooks-forms
 ```tsx
 import React from 'react'
 import { isEmail } from 'validator'
-import { useForm, FormDefinition } from 'react-hooks-forms'
+import { useForm, defineForm } from 'react-hooks-forms'
 
-const formDefinition: FormDefinition = {
+const formDefinition = defineForm({
   username: { value: '', isValid: isEmail },
   password: { value: '', isValid: value => value.length > 0 }
-}
+})
 
 const Login: React.StatelessComponent = () => {
   const { form, setField, reset, formToJson } = useForm(formDefinition)
