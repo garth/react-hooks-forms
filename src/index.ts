@@ -27,7 +27,7 @@ const validateForm = <T extends FormDefinition>(formDefinition: T): Form<T> =>
       const field = formDefinition[fieldName]
       const value = field.value
       const isValid = typeof field.isValid === 'function' ? field.isValid(value, formDefinition) : true
-      const isPristine = field.isPristine
+      const isPristine = field.isPristine === undefined ? true : field.isPristine
       form[fieldName] = {
         value,
         isPristine,
