@@ -19,7 +19,7 @@ export type SetField<T extends FormDefinition> = (name: keyof T, value: string) 
 export type Reset<T extends FormDefinition> = (formDefinition?: FormJson<T>) => void
 export type FormJson<T extends FormDefinition> = { [F in keyof T]: string }
 
-export const defineForm: <T extends FormDefinition>(formDefinition: T) => T = formDefinition => formDefinition
+export const defineForm: <T extends FormDefinition>(formDefinition: T) => T = (formDefinition) => formDefinition
 
 const validateForm = <T extends FormDefinition>(formDefinition: T): Form<T> =>
   Object.keys(formDefinition).reduce(
@@ -31,7 +31,7 @@ const validateForm = <T extends FormDefinition>(formDefinition: T): Form<T> =>
       form[fieldName] = {
         value,
         isPristine,
-        isValid
+        isValid,
       }
       form.isValid = form.isValid && isValid
       return form
@@ -40,17 +40,14 @@ const validateForm = <T extends FormDefinition>(formDefinition: T): Form<T> =>
   )
 
 const setFormValues = <T extends FormDefinition>(definition: T, values?: FormJson<T>): T =>
-  Object.keys(definition).reduce(
-    (form, field) => {
-      form[field] = {
-        ...definition[name],
-        isPristine: true,
-        value: (values && values[name]) || definition[name].value || ''
-      }
-      return form
-    },
-    {} as T
-  )
+  Object.keys(definition).reduce((form, field) => {
+    form[field] = {
+      ...definition[name],
+      isPristine: true,
+      value: (values && values[name]) || definition[name].value || '',
+    }
+    return form
+  }, {} as T)
 
 export const useForm = <T extends FormDefinition>(
   formDefinition: T,
@@ -71,8 +68,8 @@ export const useForm = <T extends FormDefinition>(
       [name]: {
         ...form[name],
         value,
-        isPristine: false
-      }
+        isPristine: false,
+      },
     })
   }
 
@@ -81,18 +78,15 @@ export const useForm = <T extends FormDefinition>(
   }
 
   const formToJson = (form: Form<T>): FormJson<T> =>
-    Object.keys(form).reduce(
-      (json, field) => {
-        json[field] = form[field].value
-        return json
-      },
-      {} as FormJson<T>
-    )
+    Object.keys(form).reduce((json, field) => {
+      json[field] = form[field].value
+      return json
+    }, {} as FormJson<T>)
 
   return {
     form: validateForm(form),
     setField,
     reset,
-    formToJson
+    formToJson,
   }
 }
