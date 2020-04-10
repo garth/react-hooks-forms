@@ -6,12 +6,13 @@ export interface FormField {
   isValid: boolean
 }
 export type IsValid = (value: string, form?: FormDefinition) => boolean
+export interface FormFieldValidate {
+  value?: string
+  isValid?: IsValid
+  isPristine?: boolean
+}
 export interface FormDefinition {
-  [fieldName: string]: {
-    value?: string
-    isValid?: IsValid
-    isPristine?: boolean
-  }
+  [fieldName: string]: FormFieldValidate
 }
 export type FormFields<T extends FormDefinition> = { [F in keyof T]: FormField }
 export type Form<T extends FormDefinition> = { isValid: boolean } & FormFields<T>
@@ -21,33 +22,34 @@ export type FormJson<T extends FormDefinition> = { [F in keyof T]: string }
 
 export const defineForm: <T extends FormDefinition>(formDefinition: T) => T = (formDefinition) => formDefinition
 
-const validateForm = <T extends FormDefinition>(formDefinition: T): Form<T> =>
-  Object.keys(formDefinition).reduce(
-    (form, fieldName) => {
-      const field = formDefinition[fieldName]
-      const value = field.value
-      const isValid = typeof field.isValid === 'function' ? field.isValid(value, formDefinition) : true
-      const isPristine = field.isPristine === undefined ? true : field.isPristine
-      form[fieldName] = {
-        value,
-        isPristine,
-        isValid,
-      }
-      form.isValid = form.isValid && isValid
-      return form
-    },
-    { isValid: true } as Form<T>
-  )
+const validateForm = <T extends FormDefinition>(formDefinition: T): Form<T> => {
+  const form: Record<string, FormField | boolean> = { isValid: true }
+  Object.keys(formDefinition).forEach((fieldName) => {
+    const field = formDefinition[fieldName]
+    const value = field.value
+    const isValid = typeof field.isValid === 'function' ? field.isValid(value, formDefinition) : true
+    const isPristine = field.isPristine === undefined ? true : field.isPristine
+    form[fieldName] = {
+      value,
+      isPristine,
+      isValid,
+    }
+    form.isValid = form.isValid && isValid
+  })
+  return form as Form<T>
+}
 
-const setFormValues = <T extends FormDefinition>(definition: T, values?: FormJson<T>): T =>
-  Object.keys(definition).reduce((form, field) => {
+const setFormValues = <T extends FormDefinition>(definition: T, values?: FormJson<T>): T => {
+  const form: Record<string, FormFieldValidate> = {}
+  Object.keys(definition).forEach((field) => {
     form[field] = {
       ...definition[name],
       isPristine: true,
       value: (values && values[name]) || definition[name].value || '',
     }
-    return form
-  }, {} as T)
+  })
+  return form as T
+}
 
 export const useForm = <T extends FormDefinition>(
   formDefinition: T,
@@ -77,11 +79,13 @@ export const useForm = <T extends FormDefinition>(
     setForm(setFormValues(originalFormDefinition, formValues || originalFormValues))
   }
 
-  const formToJson = (form: Form<T>): FormJson<T> =>
-    Object.keys(form).reduce((json, field) => {
+  const formToJson = (form: Form<T>): FormJson<T> => {
+    const json: Record<string, string> = {}
+    Object.keys(form).forEach((field) => {
       json[field] = form[field].value
-      return json
-    }, {} as FormJson<T>)
+    })
+    return json as FormJson<T>
+  }
 
   return {
     form: validateForm(form),
