@@ -27,13 +27,12 @@ const formDefinition = defineForm({
 })
 
 const Login: React.StatelessComponent = () => {
-  const { form, setField, reset, formToJson } = useForm(formDefinition)
+  const { form, reset, onSubmit } = useForm(formDefinition)
 
   return (
     <form
-      onSubmit={e => {
-        e.preventDefault()
-        console.log(formToJson(form))
+      onSubmit={onSubmit(json => {
+        console.log(json)
         reset()
       }}>
       <h1>Sign In</h1>
@@ -41,19 +40,19 @@ const Login: React.StatelessComponent = () => {
       <label>Username</label>
       <input
         value={form.username.value}
-        className={form.username.isPristine || form.username.isValid ? '' : 'error'}
-        onChange={e => setField('username', e.target.value)}
+        className={form.username.flagError ? 'error' : ''}
+        onChange={form.username.onChange}
       />
 
       <label>Password</label>
       <input
         type="password"
         value={form.password.value}
-        className={form.password.isPristine || form.password.isValid ? '' : 'error'}
-        onChange={e => setField('password', e.target.value)}
+        className={!form.password.flagError ? 'error' : ''}
+        onChange={form.password.onChange)}
       />
 
-      <button type="submit" disabled={!form.isValid}>
+      <button type="submit">
         Sign In
       </button>
     </form>

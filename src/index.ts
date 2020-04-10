@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useState, FormEvent, ChangeEvent } from 'react'
 
 export interface FormField {
   value: string
   isPristine: boolean
   isValid: boolean
+  flagError: boolean
+  onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void
 }
 export type IsValid = (value: string, form?: FormDefinition) => boolean
 export interface FormFieldValidate {
@@ -19,10 +21,16 @@ export type Form<T extends FormDefinition> = { isValid: boolean } & FormFields<T
 export type SetField<T extends FormDefinition> = (name: keyof T, value: string) => void
 export type Reset<T extends FormDefinition> = (formDefinition?: FormJson<T>) => void
 export type FormJson<T extends FormDefinition> = { [F in keyof T]: string }
+export type OnSubmit<T extends FormDefinition> = (
+  submitHandler: (json: FormJson<T>) => void
+) => (e: FormEvent<HTMLFormElement>) => void
 
 export const defineForm: <T extends FormDefinition>(formDefinition: T) => T = (formDefinition) => formDefinition
 
-const validateForm = <T extends FormDefinition>(formDefinition: T): Form<T> => {
+const validateForm = <T extends FormDefinition>(
+  formDefinition: T,
+  setField: (name: keyof T, value: string) => void
+): Form<T> => {
   const form: Record<string, FormField | boolean> = { isValid: true }
   Object.keys(formDefinition).forEach((fieldName) => {
     const field = formDefinition[fieldName]
@@ -33,6 +41,8 @@ const validateForm = <T extends FormDefinition>(formDefinition: T): Form<T> => {
       value,
       isPristine,
       isValid,
+      flagError: !isPristine && !isValid,
+      onChange: (e) => setField(fieldName, e.target.value),
     }
     form.isValid = form.isValid && isValid
   })
@@ -58,6 +68,7 @@ export const useForm = <T extends FormDefinition>(
   form: Form<T>
   setField: SetField<T>
   reset: Reset<T>
+  onSubmit: OnSubmit<T>
   formToJson: (form: Form<T>) => FormJson<T>
 } => {
   const [originalFormDefinition] = useState(formDefinition)
@@ -79,18 +90,41 @@ export const useForm = <T extends FormDefinition>(
     setForm(setFormValues(originalFormDefinition, formValues || originalFormValues))
   }
 
-  const formToJson = (form: Form<T>): FormJson<T> => {
+  const formState = validateForm(form, setField)
+
+  const formToJson = (): FormJson<T> => {
     const json: Record<string, string> = {}
-    Object.keys(form).forEach((field) => {
-      json[field] = form[field].value
+    Object.keys(formState).forEach((field) => {
+      json[field] = formState[field].value
     })
     return json as FormJson<T>
   }
 
+  const clearPristine = () => {
+    if (!formState.isValid) {
+      const invalidForm: Record<string, FormFieldValidate> = { ...form }
+      Object.keys(form).forEach((fieldName) => {
+        if (form[fieldName].isPristine) {
+          invalidForm[fieldName] = { ...form[fieldName], isPristine: false }
+          return form
+        }
+      })
+    }
+  }
+
+  const onSubmit: OnSubmit<T> = (submitHandler) => (e) => {
+    e.preventDefault()
+    clearPristine()
+    if (formState.isValid) {
+      submitHandler(formToJson())
+    }
+  }
+
   return {
-    form: validateForm(form),
+    form: formState,
     setField,
     reset,
+    onSubmit,
     formToJson,
   }
 }
