@@ -35,14 +35,14 @@ const validateForm = <T extends FormDefinition>(
   Object.keys(formDefinition).forEach((fieldName) => {
     const field = formDefinition[fieldName]
     const value = field.value
-    const isValid = typeof field.isValid === 'function' ? field.isValid(value, formDefinition) : true
+    const isValid = typeof field.isValid === 'function' ? field.isValid(value, { ...formDefinition }) : true
     const isPristine = field.isPristine === undefined ? true : field.isPristine
     form[fieldName] = {
       value,
       isPristine,
       isValid,
       flagError: !isPristine && !isValid,
-      onChange: (e) => setField(fieldName, e.target.value),
+      onChange: (e) => setField(fieldName, e.currentTarget.value),
     }
     form.isValid = form.isValid && isValid
   })
@@ -51,8 +51,8 @@ const validateForm = <T extends FormDefinition>(
 
 const setFormValues = <T extends FormDefinition>(definition: T, values?: FormJson<T>): T => {
   const form: Record<string, FormFieldValidate> = {}
-  Object.keys(definition).forEach((field) => {
-    form[field] = {
+  Object.keys(definition).forEach((name) => {
+    form[name] = {
       ...definition[name],
       isPristine: true,
       value: (values && values[name]) || definition[name].value || '',
@@ -104,11 +104,13 @@ export const useForm = <T extends FormDefinition>(
     if (!formState.isValid) {
       const invalidForm: Record<string, FormFieldValidate> = { ...form }
       Object.keys(form).forEach((fieldName) => {
-        if (form[fieldName].isPristine) {
+        if (typeof form[fieldName].isPristine === 'undefined' || form[fieldName].isPristine) {
           invalidForm[fieldName] = { ...form[fieldName], isPristine: false }
-          return form
         }
       })
+      if (Object.keys(invalidForm).length > 0) {
+        setForm({ ...form, ...invalidForm })
+      }
     }
   }
 

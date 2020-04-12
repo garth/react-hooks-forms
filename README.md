@@ -1,6 +1,6 @@
 # react-hooks-forms
 
-A react hooks approach to forms.
+A react hooks approach to forms with full test coverage.
 
 ## Install
 
@@ -18,7 +18,7 @@ npm install react-hooks-forms
 
 ```tsx
 import React from 'react'
-import { isEmail } from 'validator'
+import isEmail from 'validator/lib/isEmail'
 import { useForm, defineForm } from 'react-hooks-forms'
 
 const formDefinition = defineForm({

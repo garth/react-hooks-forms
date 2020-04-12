@@ -22,6 +22,8 @@
     "build:es": "tsc --outDir es --module es2015 --preserveWatchOutput",
     "build": "npm run build:lib & npm run build:es",
     "lint": "eslint \"src/**/*.{ts,tsx}\" && tsc -p tsconfig.json --noEmit --skipLibCheck",
+    "test": "jest --watchAll",
+    "coverage": "jest --coverage",
     "prettier": "prettier --write \"src/**/*.{js,json,ts,tsx,scss,html}\""
   },
   "prettier": {
@@ -32,7 +34,10 @@
     "jsxBracketSameLine": true
   },
   "devDependencies": {
+    "@testing-library/react-hooks": "^3.2.1",
+    "@types/jest": "^25.2.1",
     "@types/react": "^16.9.34",
+    "@types/validator": "^13.0.0",
     "@typescript-eslint/eslint-plugin": "^2.27.0",
     "@typescript-eslint/parser": "^2.27.0",
     "eslint": "^6.8.0",
@@ -40,10 +45,14 @@
     "eslint-plugin-prettier": "^3.1.2",
     "eslint-plugin-react": "^7.19.0",
     "eslint-plugin-react-hooks": "^3.0.0",
+    "jest": "^25.3.0",
     "prettier": "^2.0.4",
     "react": "^16.13.1",
+    "react-test-renderer": "^16.13.1",
     "rimraf": "^3.0.2",
-    "typescript": "3.8.3"
+    "ts-jest": "^25.3.1",
+    "typescript": "^3.8.3",
+    "validator": "^13.0.0"
   },
   "dependencies": {
     "tslib": "^1.11.1"
