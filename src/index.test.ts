@@ -1,11 +1,36 @@
 import { renderHook, act } from '@testing-library/react-hooks'
 import { ChangeEvent, FormEvent } from 'react'
 import isEmail from 'validator/lib/isEmail'
-import { useForm, defineForm } from '.'
+import { useForm, FormDefinition } from '.'
 
-const formDefinition = defineForm({
-  username: { value: '', isValid: isEmail },
+const formDefinition: FormDefinition<{
+  username: string
+  password: string
+  rememberMe: boolean
+}> = {
+  username: { value: '', isValid: (value) => isEmail(value) },
   password: { value: '', isValid: (value) => value.length > 0 },
+  rememberMe: { value: false },
+}
+
+test('String values are set from currentTarget.value', () => {
+  const { result } = renderHook(() => useForm(formDefinition))
+  act(() =>
+    result.current.form.username.onChange({ currentTarget: { value: 'test@email.com' } } as ChangeEvent<
+      HTMLInputElement
+    >)
+  )
+  expect(result.current.form.username.value).toBe('test@email.com')
+})
+
+test('Boolean values are set from currentTarget.checked', () => {
+  const { result } = renderHook(() => useForm(formDefinition))
+  act(() =>
+    result.current.form.rememberMe.onChange({ currentTarget: { type: 'checkbox', checked: true } } as ChangeEvent<
+      HTMLInputElement
+    >)
+  )
+  expect(result.current.form.rememberMe.value).toBe(true)
 })
 
 test('Form is initially invalid', () => {
@@ -113,28 +138,42 @@ test('OnSubmit receives form json', () => {
   act(() =>
     result.current.form.password.onChange({ currentTarget: { value: 'secret' } } as ChangeEvent<HTMLInputElement>)
   )
-  result.current.onSubmit((json) =>
-    expect(json).toEqual({
-      username: 'test@email.com',
-      password: 'secret',
-    })
-  )({ preventDefault() {} } as FormEvent<HTMLFormElement>)
+  act(() =>
+    result.current.onSubmit((json) =>
+      expect(json).toEqual({
+        username: 'test@email.com',
+        password: 'secret',
+        rememberMe: false,
+      })
+    )({ preventDefault() {} } as FormEvent<HTMLFormElement>)
+  )
   expect.assertions(1)
 })
 
-test('Reset values', () => {
+test('Reset values to original', () => {
+  const { result } = renderHook(() => useForm(formDefinition))
+  act(() =>
+    result.current.form.username.onChange({ currentTarget: { value: 'test@email.com' } } as ChangeEvent<
+      HTMLInputElement
+    >)
+  )
+  expect(result.current.form.username.isPristine).toBe(false)
+  expect(result.current.form.username.value).toBe('test@email.com')
+  act(() => result.current.reset())
+  expect(result.current.form.username.isPristine).toBe(true)
+  expect(result.current.form.username.value).toBe('')
+})
+
+test('Reset values to new', () => {
   const { result } = renderHook(() => useForm(formDefinition))
   act(() =>
     result.current.reset({
       username: 'test@email.com',
       password: 'secret',
+      rememberMe: true,
     })
   )
-  result.current.onSubmit((json) =>
-    expect(json).toEqual({
-      username: 'test@email.com',
-      password: 'secret',
-    })
-  )({ preventDefault() {} } as FormEvent<HTMLFormElement>)
-  expect.assertions(1)
+  expect(result.current.form.username.value).toBe('test@email.com')
+  expect(result.current.form.password.value).toBe('secret')
+  expect(result.current.form.rememberMe.value).toBe(true)
 })

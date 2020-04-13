@@ -19,12 +19,17 @@ npm install react-hooks-forms
 ```tsx
 import React from 'react'
 import isEmail from 'validator/lib/isEmail'
-import { useForm, defineForm } from 'react-hooks-forms'
+import { useForm, FormDefinition } from 'react-hooks-forms'
 
-const formDefinition = defineForm({
-  username: { value: '', isValid: isEmail },
-  password: { value: '', isValid: value => value.length > 0 }
-})
+const formDefinition: FormDefinition<{
+  username: string
+  password: string
+  rememberMe: boolean
+}> = {
+  username: { value: '', isValid: (value) => isEmail(value) },
+  password: { value: '', isValid: (value) => value.length > 0 },
+  rememberMe: { value: false }
+}
 
 const Login: React.StatelessComponent = () => {
   const { form, reset, onSubmit } = useForm(formDefinition)
@@ -51,6 +56,15 @@ const Login: React.StatelessComponent = () => {
         className={!form.password.flagError ? 'error' : ''}
         onChange={form.password.onChange)}
       />
+
+      <label>
+        <input
+          type="checkbox"
+          value={form.rememberMe.value}
+          onChange={form.rememberMe.OnChange}
+        />
+        remember me?
+      </label>
 
       <button type="submit">
         Sign In
