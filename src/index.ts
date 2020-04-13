@@ -1,31 +1,42 @@
 import { useState, FormEvent, ChangeEvent } from 'react'
 
-export type FormJson = { [name: string]: string | boolean }
-export interface FieldState<TField = string | boolean> {
+type FieldType = string | boolean
+
+export type FormJson = { [name: string]: FieldType }
+
+export interface FieldState<TField = FieldType> {
   value: TField
   isPristine: boolean
 }
+
 export interface DerivedFieldState {
   isValid: boolean
   flagError: boolean
   onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void
 }
-export type FieldValidator<TField extends string | boolean, TForm extends FormJson> = (
+
+export type FieldValidator<TField extends FieldType, TForm extends FormJson> = (
   value: TField,
   form?: FormState<TForm>
 ) => boolean
-export interface FieldDefinition<TField extends string | boolean, TForm extends FormJson> {
+
+export interface FieldDefinition<TField extends FieldType, TForm extends FormJson> {
   value: TField
   isValid?: FieldValidator<TField, TForm>
 }
+
 export type FormDefinition<TForm extends FormJson> = {
   [F in keyof TForm]: FieldDefinition<TForm[F], TForm>
 }
+
 export type FormState<TForm extends FormJson> = { [F in keyof TForm]: FieldState<TForm[F]> }
+
 export type DerivedFormState<TForm extends FormJson> = { isValid: boolean } & {
   [F in keyof TForm]: FieldState<TForm[F]> & DerivedFieldState
 }
+
 export type Reset<TForm extends FormJson> = (formJson?: TForm) => void
+
 export type OnSubmit<TForm extends FormJson> = (
   submitHandler: (formJson: TForm) => void
 ) => (e: FormEvent<HTMLFormElement>) => void
@@ -33,7 +44,7 @@ export type OnSubmit<TForm extends FormJson> = (
 const validateForm = <TForm extends FormJson>(
   formDefinition: FormDefinition<TForm>,
   formState: FormState<TForm>,
-  setField: (name: string, value: string | boolean) => void
+  setField: (name: string, value: FieldType) => void
 ): DerivedFormState<TForm> => {
   const form: Record<string, DerivedFieldState | boolean> = { isValid: true }
   Object.keys(formDefinition).forEach((fieldName) => {
@@ -46,6 +57,10 @@ const validateForm = <TForm extends FormJson>(
       isValid,
       flagError: !isPristine && !isValid,
       onChange: (event) => {
+        if (event.currentTarget.type === 'radio' && !event.currentTarget['checked']) {
+          return
+        }
+
         setField(
           fieldName,
           event.currentTarget.type === 'checkbox' ? event.currentTarget['checked'] : event.currentTarget.value
@@ -89,7 +104,7 @@ export const useForm = <TForm extends FormJson>(
 } => {
   const [form, setForm] = useState<FormState<TForm>>(() => formStateFromDefinition(formDefinition))
 
-  const setField = (name: keyof TForm, value: string | boolean) => {
+  const setField = (name: keyof TForm, value: FieldType) => {
     setForm({
       ...form,
       [name]: {
@@ -109,7 +124,7 @@ export const useForm = <TForm extends FormJson>(
   }
 
   const formToJson = (): TForm => {
-    const json: Record<string, string | boolean> = {}
+    const json: Record<string, FieldType> = {}
     Object.keys(form).forEach((field) => {
       json[field] = form[field].value
     })

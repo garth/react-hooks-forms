@@ -33,6 +33,26 @@ test('Boolean values are set from currentTarget.checked', () => {
   expect(result.current.form.rememberMe.value).toBe(true)
 })
 
+test('Radio inputs should set their value', () => {
+  const { result } = renderHook(() => useForm(formDefinition))
+  act(() =>
+    result.current.form.username.onChange({
+      currentTarget: { type: 'radio', checked: true, value: 'test' },
+    } as ChangeEvent<HTMLInputElement>)
+  )
+  expect(result.current.form.username.value).toBe('test')
+})
+
+test('Unchecked radio inputs should not change state', () => {
+  const { result } = renderHook(() => useForm(formDefinition))
+  act(() =>
+    result.current.form.rememberMe.onChange({
+      currentTarget: { type: 'radio', checked: false, value: 'test' },
+    } as ChangeEvent<HTMLInputElement>)
+  )
+  expect(result.current.form.username.value).toBe('')
+})
+
 test('Form is initially invalid', () => {
   const { result } = renderHook(() => useForm(formDefinition))
   expect(result.current.form.isValid).toBe(false)
