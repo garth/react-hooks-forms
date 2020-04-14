@@ -35,7 +35,7 @@ export type FormState<TForm extends FormBase> = {
   [F in keyof TForm]: FieldState<TForm[F]['value']>
 }
 
-export type DerivedFormState<TForm extends FormBase> = { isValid: boolean } & {
+export type DerivedFormState<TForm extends FormBase> = {
   [F in keyof TForm]: FieldState<TForm[F]['value']> & DerivedFieldState<TForm[F]['value']>
 }
 
@@ -51,8 +51,9 @@ const deriveFormState = <TForm extends FormBase>(
   formDefinition: TForm,
   formState: FormState<TForm>,
   setField: (name: string, value: any) => void
-): DerivedFormState<TForm> => {
-  const form: Record<string, DerivedFieldState | boolean> = { isValid: true }
+): [DerivedFormState<TForm>, boolean] => {
+  const form: Record<string, DerivedFieldState> = {}
+  let formIsValid = true
   Object.keys(formDefinition).forEach((fieldName) => {
     const definition = formDefinition[fieldName]
     const state = formState[fieldName]
@@ -75,9 +76,9 @@ const deriveFormState = <TForm extends FormBase>(
         )
       },
     }
-    form.isValid = form.isValid && isValid
+    formIsValid = formIsValid && isValid
   })
-  return form as DerivedFormState<TForm>
+  return [form as DerivedFormState<TForm>, formIsValid]
 }
 
 const formStateFromDefinition = <TForm extends FormBase>(formDefinition: TForm): FormState<TForm> => {
@@ -105,7 +106,8 @@ const formStateFromJson = <TForm extends FormBase>(formJson: FormJson<TForm>): F
 export const useForm = <TForm extends FormBase>(
   formDefinition: TForm
 ): {
-  form: DerivedFormState<TForm>
+  fields: DerivedFormState<TForm>
+  isValid: boolean
   reset: Reset<TForm>
   onSubmit: OnSubmit<TForm>
   formToJson: (form: FormState<TForm>) => FormJson<TForm>
@@ -139,10 +141,10 @@ export const useForm = <TForm extends FormBase>(
     return json as FormJson<TForm>
   }
 
-  const derivedForm = deriveFormState(formDefinition, form, setField)
+  const [fields, isValid] = deriveFormState(formDefinition, form, setField)
 
   const clearPristine = () => {
-    if (!derivedForm.isValid) {
+    if (!isValid) {
       const dirtyForm: Record<string, FieldState> = {}
       Object.keys(form).forEach((fieldName) => {
         dirtyForm[fieldName] = {
@@ -157,13 +159,14 @@ export const useForm = <TForm extends FormBase>(
   const onSubmit: OnSubmit<TForm> = (submitHandler) => (e) => {
     e.preventDefault()
     clearPristine()
-    if (derivedForm.isValid) {
+    if (isValid) {
       submitHandler(formToJson())
     }
   }
 
   return {
-    form: derivedForm,
+    fields,
+    isValid,
     reset,
     onSubmit,
     formToJson,

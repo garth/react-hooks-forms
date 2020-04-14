@@ -28,11 +28,11 @@ const Login: React.StatelessComponent = () => {
     password: { value: '', isValid: (value) => value.length > 0 },
     rememberMe: { value: false as boolean }
   }))
-  const { form, reset, onSubmit } = useForm(formDefinition)
+  const form = useForm(formDefinition)
 
   return (
     <form
-      onSubmit={onSubmit(json => {
+      onSubmit={form.onSubmit(json => {
         console.log(json)
         reset()
       }}>
@@ -40,29 +40,29 @@ const Login: React.StatelessComponent = () => {
 
       <label>Username</label>
       <input
-        value={form.username.value}
-        className={form.username.flagError ? 'error' : ''}
-        onChange={form.username.onChange}
+        value={form.fields.username.value}
+        className={form.fields.username.flagError ? 'error' : ''}
+        onChange={form.fields.username.onChange}
       />
 
       <label>Password</label>
       <input
         type="password"
-        value={form.password.value}
-        className={!form.password.flagError ? 'error' : ''}
-        onChange={form.password.onChange)}
+        value={form.fields.password.value}
+        className={!form.fields.password.flagError ? 'error' : ''}
+        onChange={form.fields.password.onChange)}
       />
 
       <label>
         <input
           type="checkbox"
-          value={form.rememberMe.value}
-          onChange={form.rememberMe.OnChange}
+          value={form.fields.rememberMe.value}
+          onChange={form.fields.rememberMe.OnChange}
         />
         remember me?
       </label>
 
-      <button type="submit">
+      <button type="submit" disabled={form.isValid}>
         Sign In
       </button>
     </form>
