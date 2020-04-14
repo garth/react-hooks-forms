@@ -17,17 +17,17 @@ npm install react-hooks-forms
 ## Usage Example
 
 ```tsx
-import React from 'react'
+import React, { useMemo } from 'react'
 import isEmail from 'validator/lib/isEmail'
 import { useForm, defineForm } from 'react-hooks-forms'
 
-const formDefinition: defineForm({
-  username: { value: '', isValid: (value) => isEmail(value) },
-  password: { value: '', isValid: (value) => value.length > 0 },
-  rememberMe: { value: false as boolean }
-})
 
 const Login: React.StatelessComponent = () => {
+  const formDefinition = useMemo(() => defineForm({
+    username: { value: '', isValid: (value) => isEmail(value) },
+    password: { value: '', isValid: (value) => value.length > 0 },
+    rememberMe: { value: false as boolean }
+  }))
   const { form, reset, onSubmit } = useForm(formDefinition)
 
   return (
