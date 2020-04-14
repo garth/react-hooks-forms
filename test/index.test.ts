@@ -1,17 +1,13 @@
 import { renderHook, act } from '@testing-library/react-hooks'
 import { ChangeEvent, FormEvent } from 'react'
 import isEmail from 'validator/lib/isEmail'
-import { useForm, FormDefinition } from '.'
+import { useForm, defineForm } from '../src'
 
-const formDefinition: FormDefinition<{
-  username: string
-  password: string
-  rememberMe: boolean
-}> = {
+const formDefinition = defineForm({
   username: { value: '', isValid: (value) => isEmail(value) },
   password: { value: '', isValid: (value) => value.length > 0 },
-  rememberMe: { value: false },
-}
+  rememberMe: { value: false as boolean },
+})
 
 test('String values are set from currentTarget.value', () => {
   const { result } = renderHook(() => useForm(formDefinition))
@@ -61,37 +57,23 @@ test('Form is initially invalid', () => {
 test('Invalid field content not valid', () => {
   const { result } = renderHook(() => useForm(formDefinition))
   expect(result.current.form.username.isValid).toBe(false)
-  act(() =>
-    result.current.form.username.onChange({ currentTarget: { value: 'test@email#com' } } as ChangeEvent<
-      HTMLInputElement
-    >)
-  )
+  act(() => result.current.form.username.setValue('test@email#com'))
   expect(result.current.form.username.isValid).toBe(false)
 })
 
 test('Valid field content is valid', () => {
   const { result } = renderHook(() => useForm(formDefinition))
   expect(result.current.form.username.isValid).toBe(false)
-  act(() =>
-    result.current.form.username.onChange({ currentTarget: { value: 'test@email.com' } } as ChangeEvent<
-      HTMLInputElement
-    >)
-  )
+  act(() => result.current.form.username.setValue('test@email.com'))
   expect(result.current.form.username.isValid).toBe(true)
 })
 
 test('Form is valid when all fields are valid', () => {
   const { result } = renderHook(() => useForm(formDefinition))
   expect(result.current.form.isValid).toBe(false)
-  act(() =>
-    result.current.form.username.onChange({ currentTarget: { value: 'test@email.com' } } as ChangeEvent<
-      HTMLInputElement
-    >)
-  )
+  act(() => result.current.form.username.setValue('test@email.com'))
   expect(result.current.form.isValid).toBe(false)
-  act(() =>
-    result.current.form.password.onChange({ currentTarget: { value: 'secret' } } as ChangeEvent<HTMLInputElement>)
-  )
+  act(() => result.current.form.password.setValue('secret'))
   expect(result.current.form.isValid).toBe(true)
 })
 
@@ -103,9 +85,7 @@ test('Untouch fields are pristine', () => {
 test('Touched fields are not pristine', () => {
   const { result } = renderHook(() => useForm(formDefinition))
   expect(result.current.form.password.isPristine).toBe(true)
-  act(() =>
-    result.current.form.password.onChange({ currentTarget: { value: 'secret' } } as ChangeEvent<HTMLInputElement>)
-  )
+  act(() => result.current.form.password.setValue('secret'))
   expect(result.current.form.password.isPristine).toBe(false)
 })
 
@@ -117,11 +97,7 @@ test("Don't flag errors on pristine fields", () => {
 
 test('Flag errors on dirty fields', () => {
   const { result } = renderHook(() => useForm(formDefinition))
-  act(() =>
-    result.current.form.username.onChange({ currentTarget: { value: 'test@email#com' } } as ChangeEvent<
-      HTMLInputElement
-    >)
-  )
+  act(() => result.current.form.username.setValue('test@email#com'))
   expect(result.current.form.username.isValid).toBe(false)
   expect(result.current.form.username.flagError).toBe(true)
 })
@@ -150,14 +126,8 @@ test('Is Pristine is false after failed submit', () => {
 
 test('OnSubmit receives form json', () => {
   const { result } = renderHook(() => useForm(formDefinition))
-  act(() =>
-    result.current.form.username.onChange({ currentTarget: { value: 'test@email.com' } } as ChangeEvent<
-      HTMLInputElement
-    >)
-  )
-  act(() =>
-    result.current.form.password.onChange({ currentTarget: { value: 'secret' } } as ChangeEvent<HTMLInputElement>)
-  )
+  act(() => result.current.form.username.setValue('test@email.com'))
+  act(() => result.current.form.password.setValue('secret'))
   act(() =>
     result.current.onSubmit((json) =>
       expect(json).toEqual({
@@ -172,11 +142,7 @@ test('OnSubmit receives form json', () => {
 
 test('Reset values to original', () => {
   const { result } = renderHook(() => useForm(formDefinition))
-  act(() =>
-    result.current.form.username.onChange({ currentTarget: { value: 'test@email.com' } } as ChangeEvent<
-      HTMLInputElement
-    >)
-  )
+  act(() => result.current.form.username.setValue('test@email.com'))
   expect(result.current.form.username.isPristine).toBe(false)
   expect(result.current.form.username.value).toBe('test@email.com')
   act(() => result.current.reset())

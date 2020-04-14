@@ -1,5 +1,7 @@
-src
 .editorconfig
+jest.config.js
+src
+test
 tsconfig.json
 tslint.json
 yarn.lock

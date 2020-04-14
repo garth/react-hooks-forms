@@ -2,60 +2,68 @@ import { useState, FormEvent, ChangeEvent } from 'react'
 
 type FieldType = string | boolean
 
-export type FormJson = { [name: string]: FieldType }
-
 export interface FieldState<TField = FieldType> {
   value: TField
   isPristine: boolean
 }
 
-export interface DerivedFieldState {
+export interface DerivedFieldState<TField = FieldType> {
   isValid: boolean
   flagError: boolean
+  setValue: (value: TField) => void
   onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void
 }
 
-export type FieldValidator<TField extends FieldType, TForm extends FormJson> = (
-  value: TField,
-  form?: FormState<TForm>
-) => boolean
+export type FieldValidator<TField, TForm> = (value: TField, form?: TForm) => boolean
 
-export interface FieldDefinition<TField extends FieldType, TForm extends FormJson> {
+export interface FieldDefinition<TField, TForm> {
   value: TField
   isValid?: FieldValidator<TField, TForm>
 }
 
-export type FormDefinition<TForm extends FormJson> = {
-  [F in keyof TForm]: FieldDefinition<TForm[F], TForm>
+export type formFieldBase<TField extends FieldType> = { value: TField; isValid?: FieldValidator<TField, FormBase> }
+
+export type FormBase = { [name: string]: formFieldBase<string> | formFieldBase<boolean> }
+
+export type FormDefinition<TForm extends { [name: string]: { value: FieldType } }> = {
+  [F in keyof TForm]: FieldDefinition<TForm[F]['value'], TForm>
 }
 
-export type FormState<TForm extends FormJson> = { [F in keyof TForm]: FieldState<TForm[F]> }
+export type FormJson<TForm extends FormBase> = { [F in keyof TForm]: TForm[F]['value'] }
 
-export type DerivedFormState<TForm extends FormJson> = { isValid: boolean } & {
-  [F in keyof TForm]: FieldState<TForm[F]> & DerivedFieldState
+export type FormState<TForm extends FormBase> = {
+  [F in keyof TForm]: FieldState<TForm[F]['value']>
 }
 
-export type Reset<TForm extends FormJson> = (formJson?: TForm) => void
+export type DerivedFormState<TForm extends FormBase> = { isValid: boolean } & {
+  [F in keyof TForm]: FieldState<TForm[F]['value']> & DerivedFieldState<TForm[F]['value']>
+}
 
-export type OnSubmit<TForm extends FormJson> = (
-  submitHandler: (formJson: TForm) => void
+export type Reset<TForm extends FormBase> = (formJson?: FormJson<TForm>) => void
+
+export type OnSubmit<TForm extends FormBase> = (
+  submitHandler: (formJson: FormJson<TForm>) => void
 ) => (e: FormEvent<HTMLFormElement>) => void
 
-const validateForm = <TForm extends FormJson>(
-  formDefinition: FormDefinition<TForm>,
+export const defineForm = <TForm extends FormBase>(definition: TForm): TForm => definition
+
+const deriveFormState = <TForm extends FormBase>(
+  formDefinition: TForm,
   formState: FormState<TForm>,
-  setField: (name: string, value: FieldType) => void
+  setField: (name: string, value: any) => void
 ): DerivedFormState<TForm> => {
   const form: Record<string, DerivedFieldState | boolean> = { isValid: true }
   Object.keys(formDefinition).forEach((fieldName) => {
     const definition = formDefinition[fieldName]
     const state = formState[fieldName]
-    const isValid = typeof definition.isValid === 'function' ? definition.isValid(state.value, { ...formState }) : true
+    const isValid =
+      typeof definition.isValid === 'function' ? (definition.isValid as any)(state.value, formState) : true
     const isPristine = state.isPristine
     form[fieldName] = {
       ...state,
       isValid,
       flagError: !isPristine && !isValid,
+      setValue: (value) => setField(fieldName, value),
       onChange: (event) => {
         if (event.currentTarget.type === 'radio' && !event.currentTarget['checked']) {
           return
@@ -72,7 +80,7 @@ const validateForm = <TForm extends FormJson>(
   return form as DerivedFormState<TForm>
 }
 
-const formStateFromDefinition = <TForm extends FormJson>(formDefinition: FormDefinition<TForm>) => {
+const formStateFromDefinition = <TForm extends FormBase>(formDefinition: TForm): FormState<TForm> => {
   const form: Record<string, FieldState> = {}
   Object.keys(formDefinition).forEach((fieldName) => {
     form[fieldName] = {
@@ -83,7 +91,7 @@ const formStateFromDefinition = <TForm extends FormJson>(formDefinition: FormDef
   return form as FormState<TForm>
 }
 
-const formStateFromJson = <TForm extends FormJson>(formJson: TForm) => {
+const formStateFromJson = <TForm extends FormBase>(formJson: FormJson<TForm>): FormState<TForm> => {
   const form: Record<string, FieldState> = {}
   Object.keys(formJson).forEach((fieldName) => {
     form[fieldName] = {
@@ -94,17 +102,17 @@ const formStateFromJson = <TForm extends FormJson>(formJson: TForm) => {
   return form as FormState<TForm>
 }
 
-export const useForm = <TForm extends FormJson>(
-  formDefinition: FormDefinition<TForm>
+export const useForm = <TForm extends FormBase>(
+  formDefinition: TForm
 ): {
   form: DerivedFormState<TForm>
   reset: Reset<TForm>
   onSubmit: OnSubmit<TForm>
-  formToJson: (form: FormState<TForm>) => TForm
+  formToJson: (form: FormState<TForm>) => FormJson<TForm>
 } => {
   const [form, setForm] = useState<FormState<TForm>>(() => formStateFromDefinition(formDefinition))
 
-  const setField = (name: keyof TForm, value: FieldType) => {
+  const setField = (name: string, value: any) => {
     setForm({
       ...form,
       [name]: {
@@ -115,7 +123,7 @@ export const useForm = <TForm extends FormJson>(
     })
   }
 
-  const reset = (formJson?: TForm) => {
+  const reset = (formJson?: FormJson<TForm>) => {
     if (formJson) {
       setForm(formStateFromJson(formJson))
     } else {
@@ -123,15 +131,15 @@ export const useForm = <TForm extends FormJson>(
     }
   }
 
-  const formToJson = (): TForm => {
+  const formToJson = (): FormJson<TForm> => {
     const json: Record<string, FieldType> = {}
     Object.keys(form).forEach((field) => {
       json[field] = form[field].value
     })
-    return json as TForm
+    return json as FormJson<TForm>
   }
 
-  const derivedForm = validateForm(formDefinition, form, setField)
+  const derivedForm = deriveFormState(formDefinition, form, setField)
 
   const clearPristine = () => {
     if (!derivedForm.isValid) {

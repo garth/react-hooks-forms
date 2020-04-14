@@ -15,5 +15,5 @@
     "sourceMap": true,
     "inlineSources": true
   },
-  "exclude": ["node_modules", "es", "lib"]
+  "exclude": ["node_modules", "es", "lib", "test"]
 }
