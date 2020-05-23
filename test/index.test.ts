@@ -140,6 +140,23 @@ test('OnSubmit receives form json', () => {
   expect.assertions(1)
 })
 
+test('OnSubmit accepts async handlers', () => {
+  const { result } = renderHook(() => useForm(formDefinition))
+  act(() => result.current.fields.username.setValue('test@email.com'))
+  act(() => result.current.fields.password.setValue('secret'))
+  act(() =>
+    result.current.onSubmit(async (json) => {
+      await Promise.resolve()
+      expect(json).toEqual({
+        username: 'test@email.com',
+        password: 'secret',
+        rememberMe: false,
+      })
+    })({ preventDefault() {} } as FormEvent<HTMLFormElement>)
+  )
+  expect.assertions(1)
+})
+
 test('Reset values to original', () => {
   const { result } = renderHook(() => useForm(formDefinition))
   act(() => result.current.fields.username.setValue('test@email.com'))

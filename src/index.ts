@@ -42,7 +42,7 @@ export type DerivedFormState<TForm extends FormBase> = {
 export type Reset<TForm extends FormBase> = (formJson?: FormJson<TForm>) => void
 
 export type OnSubmit<TForm extends FormBase> = (
-  submitHandler: (formJson: FormJson<TForm>) => void
+  submitHandler: (formJson: FormJson<TForm>) => void | Promise<void>
 ) => (e: FormEvent<HTMLFormElement>) => void
 
 export const defineForm = <TForm extends FormBase>(definition: TForm): TForm => definition
