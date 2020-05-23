@@ -41,7 +41,7 @@ const Login: React.StatelessComponent = () => {
       <label>Username</label>
       <input
         value={form.fields.username.value}
-        className={form.fields.username.flagError ? 'error' : ''}
+        className={form.fields.username.isValidOrPristine ? '' : 'error'}
         onChange={form.fields.username.onChange}
       />
 
@@ -49,7 +49,7 @@ const Login: React.StatelessComponent = () => {
       <input
         type="password"
         value={form.fields.password.value}
-        className={!form.fields.password.flagError ? 'error' : ''}
+        className={!form.fields.password.isValidOrPristine ? '' : 'error'}
         onChange={form.fields.password.onChange)}
       />
 

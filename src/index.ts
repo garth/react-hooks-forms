@@ -9,7 +9,7 @@ export interface FieldState<TField = FieldType> {
 
 export interface DerivedFieldState<TField = FieldType> {
   isValid: boolean
-  flagError: boolean
+  isValidOrPristine: boolean
   setValue: (value: TField) => void
   onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void
 }
@@ -63,7 +63,7 @@ const deriveFormState = <TForm extends FormBase>(
     form[fieldName] = {
       ...state,
       isValid,
-      flagError: !isPristine && !isValid,
+      isValidOrPristine: isPristine || isValid,
       setValue: (value) => setField(fieldName, value),
       onChange: (event) => {
         if (event.currentTarget.type === 'radio' && !event.currentTarget['checked']) {

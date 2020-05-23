@@ -92,14 +92,14 @@ test('Touched fields are not pristine', () => {
 test("Don't flag errors on pristine fields", () => {
   const { result } = renderHook(() => useForm(formDefinition))
   expect(result.current.fields.username.isValid).toBe(false)
-  expect(result.current.fields.username.flagError).toBe(false)
+  expect(result.current.fields.username.isValidOrPristine).toBe(true)
 })
 
 test('Flag errors on dirty fields', () => {
   const { result } = renderHook(() => useForm(formDefinition))
   act(() => result.current.fields.username.setValue('test@email#com'))
   expect(result.current.fields.username.isValid).toBe(false)
-  expect(result.current.fields.username.flagError).toBe(true)
+  expect(result.current.fields.username.isValidOrPristine).toBe(false)
 })
 
 test('OnSubmit is not called for invalid forms', () => {
