@@ -11,7 +11,7 @@ const formDefinition = defineForm({
 
 test('String values are set from currentTarget.value', () => {
   const { result } = renderHook(() => useForm(formDefinition))
-  act(() =>
+  void act(() =>
     result.current.fields.username.onChange({ currentTarget: { value: 'test@email.com' } } as ChangeEvent<
       HTMLInputElement
     >)
@@ -21,7 +21,7 @@ test('String values are set from currentTarget.value', () => {
 
 test('Boolean values are set from currentTarget.checked', () => {
   const { result } = renderHook(() => useForm(formDefinition))
-  act(() =>
+  void act(() =>
     result.current.fields.rememberMe.onChange({ currentTarget: { type: 'checkbox', checked: true } } as ChangeEvent<
       HTMLInputElement
     >)
@@ -31,7 +31,7 @@ test('Boolean values are set from currentTarget.checked', () => {
 
 test('Radio inputs should set their value', () => {
   const { result } = renderHook(() => useForm(formDefinition))
-  act(() =>
+  void act(() =>
     result.current.fields.username.onChange({
       currentTarget: { type: 'radio', checked: true, value: 'test' },
     } as ChangeEvent<HTMLInputElement>)
@@ -41,7 +41,7 @@ test('Radio inputs should set their value', () => {
 
 test('Unchecked radio inputs should not change state', () => {
   const { result } = renderHook(() => useForm(formDefinition))
-  act(() =>
+  void act(() =>
     result.current.fields.rememberMe.onChange({
       currentTarget: { type: 'radio', checked: false, value: 'test' },
     } as ChangeEvent<HTMLInputElement>)
@@ -57,23 +57,23 @@ test('Form is initially invalid', () => {
 test('Invalid field content not valid', () => {
   const { result } = renderHook(() => useForm(formDefinition))
   expect(result.current.fields.username.isValid).toBe(false)
-  act(() => result.current.fields.username.setValue('test@email#com'))
+  void act(() => result.current.fields.username.setValue('test@email#com'))
   expect(result.current.fields.username.isValid).toBe(false)
 })
 
 test('Valid field content is valid', () => {
   const { result } = renderHook(() => useForm(formDefinition))
   expect(result.current.fields.username.isValid).toBe(false)
-  act(() => result.current.fields.username.setValue('test@email.com'))
+  void act(() => result.current.fields.username.setValue('test@email.com'))
   expect(result.current.fields.username.isValid).toBe(true)
 })
 
 test('Form is valid when all fields are valid', () => {
   const { result } = renderHook(() => useForm(formDefinition))
   expect(result.current.isValid).toBe(false)
-  act(() => result.current.fields.username.setValue('test@email.com'))
+  void act(() => result.current.fields.username.setValue('test@email.com'))
   expect(result.current.isValid).toBe(false)
-  act(() => result.current.fields.password.setValue('secret'))
+  void act(() => result.current.fields.password.setValue('secret'))
   expect(result.current.isValid).toBe(true)
 })
 
@@ -85,7 +85,7 @@ test('Untouch fields are pristine', () => {
 test('Touched fields are not pristine', () => {
   const { result } = renderHook(() => useForm(formDefinition))
   expect(result.current.fields.password.isPristine).toBe(true)
-  act(() => result.current.fields.password.setValue('secret'))
+  void act(() => result.current.fields.password.setValue('secret'))
   expect(result.current.fields.password.isPristine).toBe(false)
 })
 
@@ -97,14 +97,14 @@ test("Don't flag errors on pristine fields", () => {
 
 test('Flag errors on dirty fields', () => {
   const { result } = renderHook(() => useForm(formDefinition))
-  act(() => result.current.fields.username.setValue('test@email#com'))
+  void act(() => result.current.fields.username.setValue('test@email#com'))
   expect(result.current.fields.username.isValid).toBe(false)
   expect(result.current.fields.username.isValidOrPristine).toBe(false)
 })
 
 test('OnSubmit is not called for invalid forms', () => {
   const { result } = renderHook(() => useForm(formDefinition))
-  act(() =>
+  void act(() =>
     result.current.onSubmit((json) =>
       expect(json).toEqual({
         username: '',
@@ -119,16 +119,16 @@ test('Is Pristine is false after failed submit', () => {
   const { result } = renderHook(() => useForm(formDefinition))
   expect(result.current.fields.username.isPristine).toBe(true)
   expect(result.current.fields.password.isPristine).toBe(true)
-  act(() => result.current.onSubmit(() => {})({ preventDefault() {} } as FormEvent<HTMLFormElement>))
+  void act(() => result.current.onSubmit(() => {})({ preventDefault() {} } as FormEvent<HTMLFormElement>))
   expect(result.current.fields.username.isPristine).toBe(false)
   expect(result.current.fields.password.isPristine).toBe(false)
 })
 
 test('OnSubmit receives form json', () => {
   const { result } = renderHook(() => useForm(formDefinition))
-  act(() => result.current.fields.username.setValue('test@email.com'))
-  act(() => result.current.fields.password.setValue('secret'))
-  act(() =>
+  void act(() => result.current.fields.username.setValue('test@email.com'))
+  void act(() => result.current.fields.password.setValue('secret'))
+  void act(() =>
     result.current.onSubmit((json) =>
       expect(json).toEqual({
         username: 'test@email.com',
@@ -140,11 +140,11 @@ test('OnSubmit receives form json', () => {
   expect.assertions(1)
 })
 
-test('OnSubmit accepts async handlers', () => {
+test('OnSubmit accepts async handlers', async () => {
   const { result } = renderHook(() => useForm(formDefinition))
-  act(() => result.current.fields.username.setValue('test@email.com'))
-  act(() => result.current.fields.password.setValue('secret'))
-  act(() =>
+  void act(() => result.current.fields.username.setValue('test@email.com'))
+  void act(() => result.current.fields.password.setValue('secret'))
+  await act(() =>
     result.current.onSubmit(async (json) => {
       await Promise.resolve()
       expect(json).toEqual({
@@ -159,17 +159,17 @@ test('OnSubmit accepts async handlers', () => {
 
 test('Reset values to original', () => {
   const { result } = renderHook(() => useForm(formDefinition))
-  act(() => result.current.fields.username.setValue('test@email.com'))
+  void act(() => result.current.fields.username.setValue('test@email.com'))
   expect(result.current.fields.username.isPristine).toBe(false)
   expect(result.current.fields.username.value).toBe('test@email.com')
-  act(() => result.current.reset())
+  void act(() => result.current.reset())
   expect(result.current.fields.username.isPristine).toBe(true)
   expect(result.current.fields.username.value).toBe('')
 })
 
 test('Reset values to new', () => {
   const { result } = renderHook(() => useForm(formDefinition))
-  act(() =>
+  void act(() =>
     result.current.reset({
       username: 'test@email.com',
       password: 'secret',

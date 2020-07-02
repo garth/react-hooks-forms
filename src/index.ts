@@ -160,7 +160,7 @@ export const useForm = <TForm extends FormBase>(
     e.preventDefault()
     clearPristine()
     if (isValid) {
-      submitHandler(formToJson())
+      return submitHandler(formToJson())
     }
   }
 
