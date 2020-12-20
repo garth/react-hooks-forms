@@ -50,7 +50,7 @@ export const defineForm = <TForm extends FormBase>(definition: TForm): TForm => 
 const deriveFormState = <TForm extends FormBase>(
   formDefinition: TForm,
   formState: FormState<TForm>,
-  setField: (name: string, value: any) => void
+  setField: (name: string, value: FieldType) => void
 ): [DerivedFormState<TForm>, boolean] => {
   const form: Record<string, DerivedFieldState> = {}
   let formIsValid = true
@@ -66,13 +66,15 @@ const deriveFormState = <TForm extends FormBase>(
       isValidOrPristine: isPristine || isValid,
       setValue: (value) => setField(fieldName, value),
       onChange: (event) => {
-        if (event.currentTarget.type === 'radio' && !event.currentTarget['checked']) {
+        if (event.currentTarget.type === 'radio' && !(event as ChangeEvent<HTMLInputElement>).currentTarget.checked) {
           return
         }
 
         setField(
           fieldName,
-          event.currentTarget.type === 'checkbox' ? event.currentTarget['checked'] : event.currentTarget.value
+          event.currentTarget.type === 'checkbox'
+            ? (event as ChangeEvent<HTMLInputElement>).currentTarget.checked
+            : event.currentTarget.value
         )
       },
     }
@@ -110,7 +112,7 @@ export const useForm = <TForm extends FormBase>(
   isValid: boolean
   reset: Reset<TForm>
   onSubmit: OnSubmit<TForm>
-  formToJson: (form: FormState<TForm>) => FormJson<TForm>
+  formToJson: () => FormJson<TForm>
 } => {
   const [form, setForm] = useState<FormState<TForm>>(() => formStateFromDefinition(formDefinition))
 

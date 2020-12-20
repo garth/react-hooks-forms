@@ -12,9 +12,9 @@ const formDefinition = defineForm({
 test('String values are set from currentTarget.value', () => {
   const { result } = renderHook(() => useForm(formDefinition))
   void act(() =>
-    result.current.fields.username.onChange({ currentTarget: { value: 'test@email.com' } } as ChangeEvent<
-      HTMLInputElement
-    >)
+    result.current.fields.username.onChange({
+      currentTarget: { value: 'test@email.com' },
+    } as ChangeEvent<HTMLInputElement>)
   )
   expect(result.current.fields.username.value).toBe('test@email.com')
 })
@@ -22,9 +22,9 @@ test('String values are set from currentTarget.value', () => {
 test('Boolean values are set from currentTarget.checked', () => {
   const { result } = renderHook(() => useForm(formDefinition))
   void act(() =>
-    result.current.fields.rememberMe.onChange({ currentTarget: { type: 'checkbox', checked: true } } as ChangeEvent<
-      HTMLInputElement
-    >)
+    result.current.fields.rememberMe.onChange({
+      currentTarget: { type: 'checkbox', checked: true },
+    } as ChangeEvent<HTMLInputElement>)
   )
   expect(result.current.fields.rememberMe.value).toBe(true)
 })
