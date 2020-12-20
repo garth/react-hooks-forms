@@ -21,7 +21,6 @@ import React, { useMemo } from 'react'
 import isEmail from 'validator/lib/isEmail'
 import { useForm, defineForm } from 'react-hooks-forms'
 
-
 const Login: React.StatelessComponent = () => {
   const formDefinition = useMemo(() => defineForm({
     username: { value: '', isValid: (value) => isEmail(value) },
